@@ -1,3 +1,5 @@
+use std::io::Write;
+
 struct Iter {
     current: usize,
     max: usize,
@@ -17,6 +19,7 @@ impl Iterator for Iter {
     }
 }
 
+#[derive(Debug)]
 struct Person {
     name: String,
     age: u32,
@@ -43,6 +46,45 @@ impl Person {
     fn take_age(&mut self) -> &Self {
         self.age += 1;
         self
+    }
+}
+
+enum Emotion {
+    Anger,
+    Happy,
+}
+
+trait Emotional {
+    fn get_happy(&mut self) -> String;
+    fn get_anger(&mut self) -> String;
+    fn tell_state(&self) -> String;
+}
+
+struct HappyPerson {
+    name: String,
+    state: Emotion,
+}
+
+impl Emotional for HappyPerson {
+    fn get_anger(&mut self) -> String {
+        unimplemented!()
+    }
+
+    fn get_happy(&mut self) -> String {
+        self.state = Emotion::Happy;
+        format!("{} is always happy.", self.name)
+    }
+
+    fn tell_state(&self) -> String {
+        todo!()
+    }
+}
+
+fn sample_unreachable(x: usize) -> &'static str {
+    match x {
+        n if n * n % 3 == 0 => "3n",
+        n if n * n % 3 == 1 => "3n+1 or 3n+2",
+        _ => unreachable!(), // コンパイラは上記条件で網羅していることを判定できないため
     }
 }
 
@@ -74,4 +116,31 @@ fn main() {
     let mut p = Person::new("Taro", 20);
     p.say_name().say_age();
     p.take_age().say_name().say_age();
+    println!("{:?}", p);
+
+    println!("hello {}", p.name);
+    eprintln!("hello {}", p.name); // 標準エラー出力
+
+    let mut w = Vec::new();
+    let _ = write!(&mut w, "{}", "ABC");
+    let _ = writeln!(&mut w, " is 123");
+    dbg!(w); // file name, line number, formula, value of formula
+    println!("defined in file: {}", file!());
+    println!("defined on line: {}", line!());
+    println!("is test: {}", cfg!(unix));
+    println!("CAARGO_HOME: {}", env!("CARGO_HOME"));
+
+    // debug_assert!(false); // --release リリースビルドの場合はスキップされる
+
+    let mut happy_person = HappyPerson {
+        name: "Takeshi".to_string(),
+        state: Emotion::Happy,
+    };
+
+    println!("{}", happy_person.get_happy());
+    // println!("{}", happy_person.get_anger()); // thread 'main' panicked at 'not implemented', src/main.rs:70:9
+
+    println!("{}", sample_unreachable(3));
+    println!("{}", sample_unreachable(4));
+    println!("{}", sample_unreachable(5));
 }
