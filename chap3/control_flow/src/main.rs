@@ -88,7 +88,34 @@ fn sample_unreachable(x: usize) -> &'static str {
     }
 }
 
+// EqにはPartialEqが必要
+#[derive(PartialEq, Eq)]
+struct A(i32);
+
+// PartialOrdのためにはPartialEqが必要
+#[derive(PartialEq, PartialOrd)]
+struct B(f32);
+
+// Copyには Cloneが必要
+#[derive(Copy, Clone)]
+struct C;
+
+#[derive(Clone)]
+struct D;
+
+#[derive(Default)]
+struct F;
+
 fn main() {
+    println!("{:?}", A(0) == A(1)); // 一致比較可能
+    println!("{:?}", B(1.0) > B(0.0)); // 大小比較可能
+    let c0 = C;
+    let _c1 = c0;
+    let _c2 = c0; // moveではなくcopy
+    let d0 = D;
+    let _d1 = d0.clone();
+    let _f = F::default();
+
     let array = [0, 1, 2, 3, 4, 5];
     for element in &array {
         println!("element: {}", element)
