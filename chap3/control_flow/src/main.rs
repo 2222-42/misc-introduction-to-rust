@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{io::Write, vec};
 
 struct Iter {
     current: usize,
@@ -88,13 +88,13 @@ fn sample_unreachable(x: usize) -> &'static str {
     }
 }
 
-// EqにはPartialEqが必要
+// EqにはPartialEqが必要(PartialEqは、a == aは満たさなくても良いと条件を緩めたEq)
 #[derive(PartialEq, Eq)]
 struct A(i32);
 
 // PartialOrdのためにはPartialEqが必要
 #[derive(PartialEq, PartialOrd)]
-struct B(f32);
+struct B(f32); // f32は厳密なEqが実装できない。
 
 // Copyには Cloneが必要
 #[derive(Copy, Clone)]
@@ -106,7 +106,14 @@ struct D;
 #[derive(Default)]
 struct F;
 
+fn sort_f32_in_vec() {
+    let mut x = vec![0.1, 0.5, 0.3, 0.4, 0.2]; // vec![0.1, 0.5, 0.3, 0.4, 0.2, 0.0 / 0.0];
+    x.sort_by(|a, b| a.partial_cmp(b).unwrap()); // NaNが入っているとunwrapでpanicが起きる
+    println!("{:?}", x);
+}
+
 fn main() {
+    sort_f32_in_vec();
     println!("{:?}", A(0) == A(1)); // 一致比較可能
     println!("{:?}", B(1.0) > B(0.0)); // 大小比較可能
     let c0 = C;
