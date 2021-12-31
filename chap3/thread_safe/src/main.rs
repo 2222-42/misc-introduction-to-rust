@@ -1,5 +1,5 @@
 use std::{
-    sync::{Arc, Mutex},
+    sync::{mpsc, Arc, Mutex},
     thread,
 };
 
@@ -28,6 +28,43 @@ fn pass_closure() {
     dbg!(data);
 }
 
+fn message_passing() {
+    let mut handles = Vec::new();
+    let mut data = vec![1; 10];
+    let mut snd_channels = Vec::new();
+    let mut rcv_channels = Vec::new();
+
+    for _ in 0..10 {
+        // main -> threads
+        let (snd_tx, snd_rx) = mpsc::channel();
+        // thread -> main
+        let (rcv_tx, rcv_rx) = mpsc::channel();
+
+        snd_channels.push(snd_tx);
+        rcv_channels.push(rcv_rx);
+
+        handles.push(thread::spawn(move || {
+            let mut data = snd_rx.recv().unwrap();
+            data += 1;
+            let _ = rcv_tx.send(data);
+        }))
+    }
+
+    for x in 0..10 {
+        let _ = snd_channels[x].send(data[x]);
+    }
+
+    for x in 0..10 {
+        data[x] = rcv_channels[x].recv().unwrap();
+    }
+
+    for handle in handles {
+        let _ = handle.join();
+    }
+
+    dbg!(data);
+}
+
 fn main() {
     // スレッドのハンドル
     let handle = thread::spawn(|| // クロージャを受け取り、それを新しいスレッドで実行する
@@ -38,4 +75,6 @@ fn main() {
     let _wait = dbg!(handle.join()); // joinを読んで、スレッドの終了を待つ。
 
     pass_closure();
+
+    message_passing();
 }
