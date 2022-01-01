@@ -22,6 +22,25 @@ impl Future for CountDown {
     }
 }
 
+async fn async_add(left: i32, right: i32) -> i32 {
+    left + right
+}
+
+async fn print_result(value: i32) {
+    println!("{}", value);
+}
+
+async fn something_great_async_function() -> i32 {
+    let ans1 = async_add(2, 3).await;
+    print_result(ans1); // .awaitしない限り、中身の評価が走らないので、出力されない。
+    let ans2 = async_add(3, 4).await;
+    print_result(ans2).await;
+    let ans3 = async_add(5, 4).await;
+    let result = ans1 + ans2 + ans3;
+    println!("{}", result);
+    result
+}
+
 fn main() {
     let countdown_future1 = CountDown(10);
     let countdown_future2 = CountDown(20);
@@ -30,4 +49,6 @@ fn main() {
     for (i, s) in res.iter().enumerate() {
         println!("{}: {}", i, s);
     }
+
+    block_on(something_great_async_function()); // executor::block_on関数が async fnを実行するランタイムの起動ポイント
 }
