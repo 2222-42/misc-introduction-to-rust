@@ -41,6 +41,14 @@ async fn something_great_async_function() -> i32 {
     result
 }
 
+fn move_to_async_block() -> impl Future<Output = ()> {
+    let outside_variable = "this is outside".to_string();
+    async move {
+        // move キーワードで、変数の所有権をasyncブロックの中に移する
+        println!("{}", outside_variable);
+    }
+}
+
 fn main() {
     let countdown_future1 = CountDown(10);
     let countdown_future2 = CountDown(20);
@@ -51,4 +59,6 @@ fn main() {
     }
 
     block_on(something_great_async_function()); // executor::block_on関数が async fnを実行するランタイムの起動ポイント
+
+    block_on(move_to_async_block());
 }
