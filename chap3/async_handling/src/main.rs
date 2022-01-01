@@ -49,6 +49,19 @@ fn move_to_async_block() -> impl Future<Output = ()> {
     }
 }
 
+fn some_great_function() -> impl Future<Output = i32> {
+    async {
+        // asyncブロック内に置くことで、valueの所有権を'staticに引きのばす
+        let value = 5;
+        send_to_another_thread_with_borrowing(&value).await
+        // borrowed value does not live long enough
+    }
+}
+
+async fn send_to_another_thread_with_borrowing(x: &i32) -> i32 {
+    *x
+}
+
 fn main() {
     let countdown_future1 = CountDown(10);
     let countdown_future2 = CountDown(20);
@@ -61,4 +74,5 @@ fn main() {
     block_on(something_great_async_function()); // executor::block_on関数が async fnを実行するランタイムの起動ポイント
 
     block_on(move_to_async_block());
+    let _ = some_great_function();
 }
