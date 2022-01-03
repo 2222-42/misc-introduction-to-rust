@@ -1,3 +1,8 @@
+use std::{
+    fs::File,
+    io::{stdin, BufRead, BufReader},
+};
+
 use clap::Parser;
 #[derive(Parser, Debug)]
 #[clap(
@@ -11,19 +16,26 @@ struct Opts {
     verbose: bool,
     #[clap(name = "FILE")]
     formula_file: Option<String>,
-    #[clap(name = "NUMBER", default_value = "0")]
-    num: i32,
+}
+
+fn run<R: BufRead>(reader: R, verbose: bool) {
+    for line in reader.lines() {
+        let line = line.unwrap();
+        println!("{}", line);
+    }
 }
 
 fn main() {
     let opts = Opts::parse();
 
-    match opts.formula_file {
-        Some(file) => println!("File specified: {}", file),
-        None => println!("No file specified."),
+    if let Some(path) = opts.formula_file {
+        // TODO: error handling
+        let f = File::open(path).unwrap(); // ファイルハンドルの取得
+        let reader = BufReader::new(f); // Bufreadは高水準で、システムコールの数を減らす
+        run(reader, opts.verbose)
+    } else {
+        let stdin = stdin();
+        let reader = stdin.lock();
+        run(reader, opts.verbose);
     }
-
-    println!("The num is: {}", opts.num);
-
-    println!("Is verbosity specified?: {}", opts.verbose);
 }
