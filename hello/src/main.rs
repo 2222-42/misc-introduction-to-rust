@@ -34,8 +34,8 @@ fn main() {
 
     let result: TestResult = Ok(200);
     let next_result = result.and_then(func);
-    let last_result = error_handling(next_result);
+    let _last_result = error_handling(next_result);
     let result: TestResult = Err("error".to_string());
     let next_result = result.and_then(func);
-    let last_result = error_handling(next_result);
+    let _last_result = error_handling(next_result);
 }
