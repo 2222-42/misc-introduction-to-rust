@@ -1,7 +1,14 @@
 use iced::{
     button, executor, Align, Application, Button, Clipboard, Column, Command, Element, Font,
-    HorizontalAlignment, Length, Row, Settings, Text,
+    HorizontalAlignment, Length, Row, Settings, Subscription, Text,
 };
+use iced_futures::{self, futures};
+use std::time::{Duration, Instant};
+
+const FPS: u64 = 30;
+const MILLISEC: u64 = 1000;
+const MINUTE: u64 = 60;
+const HOUR: u64 = 60 * MINUTE;
 
 pub enum TickState {
     Stopped,
@@ -19,12 +26,49 @@ pub enum Message {
     Start,
     Stop,
     Reset,
+    Update,
 }
 
 const FONT: Font = Font::External {
     name: "PixelMplus10-Regular",
     bytes: include_bytes!("../rsc/PixelMplus10-Regular.ttf"),
 };
+
+pub struct Timer {
+    duration: Duration,
+}
+
+impl Timer {
+    fn new(duration: Duration) -> Timer {
+        Timer { duration }
+    }
+}
+
+impl<H, E> iced_native::subscription::Recipe<H, E> for Timer
+where
+    H: std::hash::Hasher,
+{
+    // Recipeが作ったStreamから出力されるイベントの型
+    type Output = Instant;
+
+    // それぞれのSubscriptionを比較できるようにするため
+    fn hash(&self, state: &mut H) {
+        use std::hash::Hash;
+        std::any::TypeId::of::<Self>().hash(state);
+        self.duration.hash(state);
+    }
+
+    // Recipeを実行し、Subscriptionのイベントを出力するStream(Itereatorの非同期版)を作り出すため
+    fn stream(
+        self: Box<Self>,
+        _input: iced_futures::BoxStream<E>,
+    ) -> iced_futures::BoxStream<Self::Output> {
+        use futures::stream::StreamExt;
+        async_std::stream::interval(self.duration)
+            .map(|_| Instant::now())
+            .boxed()
+    }
+}
 
 impl Application for GUI {
     type Executor = executor::Default;
@@ -55,6 +99,7 @@ impl Application for GUI {
             Message::Start => self.tick_state = TickState::Ticking,
             Message::Stop => self.tick_state = TickState::Stopped,
             Message::Reset => {}
+            _ => {} // TODO: support for Messsage::Update
         }
         Command::none()
     }
@@ -101,6 +146,11 @@ impl Application for GUI {
             .height(Length::Fill)
             .align_items(Align::Center)
             .into()
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        let timer = Timer::new(Duration::from_millis(MILLISEC / FPS));
+        iced::Subscription::from_recipe(timer).map(|_| Message::Update)
     }
 }
 
