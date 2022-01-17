@@ -112,11 +112,14 @@ impl Application for GUI {
                 self.last_update = Instant::now();
                 self.total_duration = Duration::default();
             }
-            Message::Update => {
-                let now_update = Instant::now();
-                self.total_duration += now_update - self.last_update;
-                self.last_update = now_update;
-            }
+            Message::Update => match self.tick_state {
+                TickState::Ticking => {
+                    let now_update = Instant::now();
+                    self.total_duration += now_update - self.last_update;
+                    self.last_update = now_update;
+                }
+                _ => {}
+            },
         }
         Command::none()
     }
