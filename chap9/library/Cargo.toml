@@ -1,0 +1,22 @@
+[package]
+name = "library"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+# 以下の左辺は新たに定義したフィーチャ名で、依存するクレートやフィーチャを右辺に列挙する。defaultは特別。
+default = ["parallel", "serde"]
+
+special = []
+
+parallel = ["crossbeam"]
+
+nightly = ["crossbeam/nightly"]
+
+full = ["crossbeam/nightly", "parallel", "serde"]
+
+[dependencies]
+crossbeam = {version = "0.7.3", optional = true}
+serde = {version = "1.0.111", optional = true}
